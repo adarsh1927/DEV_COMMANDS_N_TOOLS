@@ -26,9 +26,9 @@ foreach ($file in $files) {
     Add-Content $outputFile "File: $relativePath"
     Add-Content $outputFile "---"
     Add-Content $outputFile ""
-    Add-Content $outputFile "````$extension"
+    Add-Content $outputFile "`````$extension"
     Add-Content -Path $outputFile -Value (Get-Content -Path $file.FullName -Raw)
-    Add-Content $outputFile "````"
+    Add-Content $outputFile "`````"
     Add-Content $outputFile ""
 }
 
