@@ -42,7 +42,7 @@ Write-Host "✅ Project successfully exported to '$outputFile'"
 
 # --- Configuration ---
 OUTPUT_FILE="rhysley-bot-complete-project.md"
-EXCLUDE_DIRS=("./node_modules" "./.git" "./.vscode" "./dist" "./build")
+EXCLUDE_DIRS=("./node_modules" "./.git" "./.vscode" "./dist" "./build" "./.gitignore")
 
 # --- Build the find command's exclusion parameters ---
 prune_paths=()
