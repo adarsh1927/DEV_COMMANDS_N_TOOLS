@@ -35,7 +35,7 @@ foreach ($file in $files) {
 Write-Host "✅ Project successfully exported to '$outputFile'"
 ```
 
-## Linux
+## Linux:
 
 ```bash
 #!/bin/bash
