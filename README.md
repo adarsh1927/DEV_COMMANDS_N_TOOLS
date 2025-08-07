@@ -3,8 +3,8 @@ Use full dev commands and tools
 ---
 
 ## PRINT WHOLE PROJECT IN MD FILE
-Save the entire structure, including the directory tree and file content, in a Markdown file so you can easily chat with Cloude, Gemini, or ChatGPT without manually pasting files.
-Open Terminal/PowerShell in the location of the project or any desired child directory, copy and paste the whole set of commands/script and press enter.
+Save the entire structure, including the **Directory Tree** and **File Content**, in a **Markdown** file so you can easily chat with Cloude, Gemini, or ChatGPT without manually pasting files.  
+Open Terminal/PowerShell in the location of the project or any desired child directory, copy and paste the whole set of commands/script and press enter.  
 
 ### WINDOWS:
 ```POWERSHELL
