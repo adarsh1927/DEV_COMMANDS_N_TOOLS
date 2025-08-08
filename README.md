@@ -9,60 +9,54 @@ Open Terminal/PowerShell in the location of the project or any desired child dir
 ### WINDOWS:
 ```POWERSHELL
 # --- Configuration ---
-$outputFile = "project_final_corrected.md"
+$outputFile = "project-export-with-tree-command.md"
 $excludeDirs = @("node_modules", ".git", ".vscode", "dist", "build", "coverage")
-$maxDepth = 10 # Prevents infinitely deep loops in case of symlink issues
 
 # --- Script ---
-# 1. Start with a clean file and add the Tree Header
+# Start with a clean file
 Clear-Content $outputFile -ErrorAction SilentlyContinue
-Add-Content $outputFile "# Project Structure"
-Add-Content $outputFile ""
-# USE SINGLE QUOTES for literal backticks
-Add-Content $outputFile '```'
 
-# 2. Generate and Add the Directory Tree
-Get-ChildItem -Path . -Recurse -Depth $maxDepth -Exclude $excludeDirs | ForEach-Object {
-    $depth = $_.FullName.Split([System.IO.Path]::DirectorySeparatorChar).Count - $PWD.Path.Split([System.IO.Path]::DirectorySeparatorChar).Count
-    $indent = "    " * ($depth - 1)
-    $prefix = if ($_.PSIsContainer) { "📁" } else { "📄" }
-    "$indent$prefix $($_.Name)" | Add-Content -Path $outputFile
-}
+# --- Part 1: Generate the Tree using the 'tree' command ---
+$treeContent = @()
+$treeContent += "# Project Structure"
+$treeContent += ""
+# --- FIX: Changed double quotes to single quotes ---
+$treeContent += '```' 
+# Use /F to include files and /A to use ASCII characters for better file compatibility.
+# Note: This will show ALL files and folders, as tree.com cannot exclude.
+$treeContent += (tree /F /A)
+# --- FIX: Changed double quotes to single quotes ---
+$treeContent += '```'
+$treeContent += ""
+$treeContent += "# File Contents"
 
-# USE SINGLE QUOTES for literal backticks
-Add-Content $outputFile '```'
-Add-Content $outputFile ""
-Add-Content $outputFile "# File Contents"
+Add-Content -Path $outputFile -Value $treeContent
 
-# 3. Append the contents of each file
-$files = Get-ChildItem -Path . -Recurse -File -Exclude $excludeDirs
+# --- Part 2: Append File Contents (this part was already correct) ---
+$filesToProcess = Get-ChildItem -Path . -Recurse -File -Exclude $excludeDirs | Where-Object { $_.Name -ne $outputFile }
 
-foreach ($file in $files) {
-    # Skip the output file itself to prevent it from being included in the output
-    if ($file.FullName -eq (Join-Path -Path $PWD.Path -ChildPath $outputFile)) {
-        continue
-    }
-
+foreach ($file in $filesToProcess) {
     $relativePath = $file.FullName.Replace($PWD.Path + "\", "")
     $extension = $file.Extension.TrimStart('.')
     
     if ([string]::IsNullOrEmpty($extension)) {
         $extension = "text"
     }
-
-    Add-Content $outputFile "---"
-    Add-Content $outputFile "File: $relativePath"
-    Add-Content $outputFile "---"
-    Add-Content $outputFile ""
-    # USE CONCATENATION for a mix of literal strings and variables
-    Add-Content $outputFile ('```' + $extension)
-    Add-Content -Path $outputFile -Value (Get-Content -Path $file.FullName -Raw)
-    # USE SINGLE QUOTES for the closing backticks
-    Add-Content $outputFile '```'
-    Add-Content $outputFile ""
+    
+    $fileContent = @()
+    $fileContent += "---"
+    $fileContent += "File: $relativePath"
+    $fileContent += "---"
+    $fileContent += ""
+    $fileContent += ('```' + $extension)
+    $fileContent += (Get-Content -Path $file.FullName -Raw)
+    $fileContent += '```'
+    $fileContent += ""
+    
+    Add-Content -Path $outputFile -Value $fileContent
 }
 
-Write-Host "✅ Project with directory tree successfully exported to '$outputFile'"
+Write-Host "✅ Project successfully exported to '$outputFile' using the 'tree /F' command."
 ```
 
 ### Linux:
