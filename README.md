@@ -18,7 +18,7 @@ $maxDepth = 10 # Prevents infinitely deep loops in case of symlink issues
 Clear-Content $outputFile -ErrorAction SilentlyContinue
 Add-Content $outputFile "# Project Structure"
 Add-Content $outputFile ""
-Add-Content $outputFile "````"
+Add-Content $outputFile "``````"
 
 # 2. Generate and Add the Directory Tree
 Get-ChildItem -Path . -Recurse -Depth $maxDepth -Exclude $excludeDirs | ForEach-Object {
@@ -28,7 +28,7 @@ Get-ChildItem -Path . -Recurse -Depth $maxDepth -Exclude $excludeDirs | ForEach-
     "$indent$prefix $($_.Name)" | Add-Content -Path $outputFile
 }
 
-Add-Content $outputFile "````"
+Add-Content $outputFile "``````"
 Add-Content $outputFile ""
 Add-Content $outputFile "# File Contents"
 
@@ -47,9 +47,9 @@ foreach ($file in $files) {
     Add-Content $outputFile "File: $relativePath"
     Add-Content $outputFile "---"
     Add-Content $outputFile ""
-    Add-Content $outputFile "````$extension"
+    Add-Content $outputFile "``````$extension"
     Add-Content -Path $outputFile -Value (Get-Content -Path $file.FullName -Raw)
-    Add-Content $outputFile "````"
+    Add-Content $outputFile "``````"
     Add-Content $outputFile ""
 }
 
