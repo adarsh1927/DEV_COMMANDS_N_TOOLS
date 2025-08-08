@@ -9,7 +9,7 @@ Open Terminal/PowerShell in the location of the project or any desired child dir
 ### WINDOWS:
 ```POWERSHELL
 # --- Configuration ---
-$outputFile = "whole_project_structure.md"
+$outputFile = "project_final_corrected.md"
 $excludeDirs = @("node_modules", ".git", ".vscode", "dist", "build", "coverage")
 $maxDepth = 10 # Prevents infinitely deep loops in case of symlink issues
 
@@ -18,7 +18,8 @@ $maxDepth = 10 # Prevents infinitely deep loops in case of symlink issues
 Clear-Content $outputFile -ErrorAction SilentlyContinue
 Add-Content $outputFile "# Project Structure"
 Add-Content $outputFile ""
-Add-Content $outputFile "``````"
+# USE SINGLE QUOTES for literal backticks
+Add-Content $outputFile '```'
 
 # 2. Generate and Add the Directory Tree
 Get-ChildItem -Path . -Recurse -Depth $maxDepth -Exclude $excludeDirs | ForEach-Object {
@@ -28,7 +29,8 @@ Get-ChildItem -Path . -Recurse -Depth $maxDepth -Exclude $excludeDirs | ForEach-
     "$indent$prefix $($_.Name)" | Add-Content -Path $outputFile
 }
 
-Add-Content $outputFile "``````"
+# USE SINGLE QUOTES for literal backticks
+Add-Content $outputFile '```'
 Add-Content $outputFile ""
 Add-Content $outputFile "# File Contents"
 
@@ -36,6 +38,11 @@ Add-Content $outputFile "# File Contents"
 $files = Get-ChildItem -Path . -Recurse -File -Exclude $excludeDirs
 
 foreach ($file in $files) {
+    # Skip the output file itself to prevent it from being included in the output
+    if ($file.FullName -eq (Join-Path -Path $PWD.Path -ChildPath $outputFile)) {
+        continue
+    }
+
     $relativePath = $file.FullName.Replace($PWD.Path + "\", "")
     $extension = $file.Extension.TrimStart('.')
     
@@ -47,9 +54,11 @@ foreach ($file in $files) {
     Add-Content $outputFile "File: $relativePath"
     Add-Content $outputFile "---"
     Add-Content $outputFile ""
-    Add-Content $outputFile "``````$extension"
+    # USE CONCATENATION for a mix of literal strings and variables
+    Add-Content $outputFile ('```' + $extension)
     Add-Content -Path $outputFile -Value (Get-Content -Path $file.FullName -Raw)
-    Add-Content $outputFile "``````"
+    # USE SINGLE QUOTES for the closing backticks
+    Add-Content $outputFile '```'
     Add-Content $outputFile ""
 }
 
