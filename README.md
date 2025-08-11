@@ -9,30 +9,53 @@ Open Terminal/PowerShell in the location of the project or any desired child dir
 ### WINDOWS:
 ```POWERSHELL
 # --- Configuration ---
-$outputFile = "whole_project_structure.md"
+$outputFile = "project-export-guaranteed.md"
 $excludeDirs = @("node_modules", ".git", ".vscode", "dist", "build", "coverage")
+$maxDepth = 15 
 
 # --- Script ---
-# Start with a clean file
+# 1. Start with a clean file
 Clear-Content $outputFile -ErrorAction SilentlyContinue
 
-# --- Part 1: Generate the Tree using the 'tree' command ---
-$treeContent = @()
-$treeContent += "# Project Structure"
-$treeContent += ""
-# --- FIX: Changed double quotes to single quotes ---
-$treeContent += '```' 
-# Use /F to include files and /A to use ASCII characters for better file compatibility.
-# Note: This will show ALL files and folders, as tree.com cannot exclude.
-$treeContent += (tree /F /A)
-# --- FIX: Changed double quotes to single quotes ---
-$treeContent += '```'
-$treeContent += ""
-$treeContent += "# File Contents"
+# --- Part 1: Generate the Directory Tree (Ultra-Compatible Method) ---
 
-Add-Content -Path $outputFile -Value $treeContent
+# First, get the complete list of items and store it in a variable.
+$allItems = Get-ChildItem -Path . -Recurse -Depth $maxDepth -Exclude $excludeDirs | Where-Object { $_.Name -ne $outputFile }
 
-# --- Part 2: Append File Contents (this part was already correct) ---
+# Now, process the in-memory list to generate the tree lines.
+$treeLines = @()
+$treeLines += "# Project Structure"
+$treeLines += ""
+$treeLines += "```"
+
+foreach ($item in $allItems) {
+    $depth = $item.FullName.Split([System.IO.Path]::DirectorySeparatorChar).Count - $PWD.Path.Split([System.IO.Path]::DirectorySeparatorChar).Count
+    
+    # --- FIX 1: ULTRA-COMPATIBLE INDENTATION USING A FOR LOOP ---
+    $indent = ""
+    for ($i = 1; $i -lt $depth; $i++) {
+        $indent += "    " # Add four spaces for each level
+    }
+    
+    # --- FIX 2: REPLACED EMOJIS WITH PLAIN ASCII CHARACTERS ---
+    $prefix = ""
+    if ($item.PSIsContainer) {
+        $prefix = "[D]" # [D] for Directory
+    } else {
+        $prefix = "[F]" # [F] for File
+    }
+
+    $treeLines += "$indent$prefix $($item.Name)"
+}
+$treeLines += "```"
+$treeLines += ""
+$treeLines += "# File Contents"
+
+# Finally, write the complete tree to the file in one operation.
+Add-Content -Path $outputFile -Value $treeLines
+
+# --- Part 2: Append File Contents Safely ---
+
 $filesToProcess = Get-ChildItem -Path . -Recurse -File -Exclude $excludeDirs | Where-Object { $_.Name -ne $outputFile }
 
 foreach ($file in $filesToProcess) {
@@ -56,7 +79,7 @@ foreach ($file in $filesToProcess) {
     Add-Content -Path $outputFile -Value $fileContent
 }
 
-Write-Host "✅ Project successfully exported to '$outputFile' using the 'tree /F' command."
+Write-Host "✅ Project with directory tree successfully exported to '$outputFile'."
 ```
 
 ### Linux:
