@@ -7,79 +7,84 @@ Save the entire structure, including the **Directory Tree** and **File Content**
 Open Terminal/PowerShell in the location of the project or any desired child directory, copy and paste the whole set of commands/script and press enter.  
 
 ### WINDOWS:
-```POWERSHELL
+1. Save this file in Notepad (do not use any fancy editor, use a raw text editor like Notepad).
+2. Copy and paste the script below in Notepad and save it as export.ps1 in your project directory or any desired child directory.
+3. Open PowerShell
+4. Run command `cd your_project_or_desired_directory` in PowerShell
+5. Again, run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
+6. Then run `.\export.ps1`
+You will get the file whole_project_structure.ps1, change its extension to md or just change the line of script below $outputFile = 'whole_project_structure.md'.
+
+```POWERSHELL (paste this in notepad)
 # --- Configuration ---
-$outputFile = "whole_project_structure.md"
-$excludeDirs = @("node_modules", ".git", ".vscode", "dist", "build", "coverage")
-$maxDepth = 15 
+$outputFile = 'whole_project_structure.ps1'
+$excludeDirs = @('node_modules', '.git', '.vscode', 'dist', 'build', 'coverage')
+$maxDepth = 15
 
 # --- Script ---
-# 1. Start with a clean file
+# Start with a clean file
 Clear-Content $outputFile -ErrorAction SilentlyContinue
 
-# --- Part 1: Generate the Directory Tree (Ultra-Compatible Method) ---
-
-# First, get the complete list of items and store it in a variable.
+# Get all items first to avoid file lock issues
 $allItems = Get-ChildItem -Path . -Recurse -Depth $maxDepth -Exclude $excludeDirs | Where-Object { $_.Name -ne $outputFile }
 
-# Now, process the in-memory list to generate the tree lines.
-$treeLines = @()
-$treeLines += "# Project Structure"
-$treeLines += ""
-$treeLines += "```"
+# Prepare an array to hold all the output lines
+$outputLines = @()
+$outputLines += '# Project Structure'
+$outputLines += ''
+$outputLines += '```'
 
+# Build the tree structure
 foreach ($item in $allItems) {
     $depth = $item.FullName.Split([System.IO.Path]::DirectorySeparatorChar).Count - $PWD.Path.Split([System.IO.Path]::DirectorySeparatorChar).Count
     
-    # --- FIX 1: ULTRA-COMPATIBLE INDENTATION USING A FOR LOOP ---
-    $indent = ""
-    for ($i = 1; $i -lt $depth; $i++) {
-        $indent += "    " # Add four spaces for each level
+    $indentation = ''
+    if ($depth -gt 1) {
+        for ($i = 1; $i -lt $depth; $i++) {
+            $indentation += '    '
+        }
     }
     
-    # --- FIX 2: REPLACED EMOJIS WITH PLAIN ASCII CHARACTERS ---
-    $prefix = ""
+    $prefix = ''
     if ($item.PSIsContainer) {
-        $prefix = "[D]" # [D] for Directory
+        $prefix = '[Dir]  '
     } else {
-        $prefix = "[F]" # [F] for File
+        $prefix = '[File] '
     }
 
-    $treeLines += "$indent$prefix $($item.Name)"
+    $outputLines += ($indentation + $prefix + $item.Name)
 }
-$treeLines += "```"
-$treeLines += ""
-$treeLines += "# File Contents"
 
-# Finally, write the complete tree to the file in one operation.
-Add-Content -Path $outputFile -Value $treeLines
+$outputLines += '```'
+$outputLines += ''
+$outputLines += '# File Contents'
 
-# --- Part 2: Append File Contents Safely ---
-
+# Get all files to process
 $filesToProcess = Get-ChildItem -Path . -Recurse -File -Exclude $excludeDirs | Where-Object { $_.Name -ne $outputFile }
 
+# Build the file content sections
 foreach ($file in $filesToProcess) {
-    $relativePath = $file.FullName.Replace($PWD.Path + "\", "")
+    $relativePath = $file.FullName.Replace($PWD.Path + '\', '')
     $extension = $file.Extension.TrimStart('.')
     
     if ([string]::IsNullOrEmpty($extension)) {
-        $extension = "text"
+        $extension = 'text'
     }
     
-    $fileContent = @()
-    $fileContent += "---"
-    $fileContent += "File: $relativePath"
-    $fileContent += "---"
-    $fileContent += ""
-    $fileContent += ('```' + $extension)
-    $fileContent += (Get-Content -Path $file.FullName -Raw)
-    $fileContent += '```'
-    $fileContent += ""
-    
-    Add-Content -Path $outputFile -Value $fileContent
+    $outputLines += '---'
+    $outputLines += ('File: ' + $relativePath)
+    $outputLines += '---'
+    $outputLines += ''
+    $outputLines += ('```' + $extension)
+    $outputLines += (Get-Content -Path $file.FullName -Raw)
+    $outputLines += '```'
+    $outputLines += ''
 }
 
-Write-Host "✅ Project with directory tree successfully exported to '$outputFile'."
+# Write all collected lines to the file at once
+Add-Content -Path $outputFile -Value $outputLines
+
+Write-Host 'SUCCESS: Project exported to' $outputFile
 ```
 
 ### Linux:
