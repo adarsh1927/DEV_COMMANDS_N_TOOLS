@@ -9,7 +9,7 @@ Open Terminal/PowerShell in the location of the project or any desired child dir
 ### WINDOWS:
 ```POWERSHELL
 # --- Configuration ---
-$outputFile = "project-export-guaranteed.md"
+$outputFile = "whole_project_structure.md"
 $excludeDirs = @("node_modules", ".git", ".vscode", "dist", "build", "coverage")
 $maxDepth = 15 
 
