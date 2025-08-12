@@ -154,12 +154,12 @@ echo "✅ Project with directory tree successfully exported to '$OUTPUT_FILE'"
 
     **Command 1: Go to your user profile directory**
     ```powershell
-    cd C:\Users\adarshpandey
+    cd C:\Users\your_user_name
     ```
 
     **Command 2: Take ownership of the `.ssh` folder and everything inside it.**
     ```powershell
-    icacls .ssh /T /Q /C /setowner "adarshpandey"
+    icacls .ssh /T /Q /C /setowner "your_user_name"
     ```
 
     **Command 3: Reset all permissions on the folder.**
@@ -167,9 +167,9 @@ echo "✅ Project with directory tree successfully exported to '$OUTPUT_FILE'"
     icacls .ssh /T /Q /C /reset
     ```
 
-    **Command 4: Grant your user (`adarshpandey`) full control.** (This is the most important step).
+    **Command 4: Grant your user (`your_user_name`) full control.** (This is the most important step).
     ```powershell
-    icacls .ssh /T /Q /C /grant adarshpandey:F
+    icacls .ssh /T /Q /C /grant your_user_name:F
     ```
 
     **Command 5: Remove permissions for everyone else (inheritance).**
@@ -180,6 +180,6 @@ echo "✅ Project with directory tree successfully exported to '$OUTPUT_FILE'"
 3.  **Verify the Permissions (Optional but Recommended):**
     *   Run this final command to see who has access to the `config` file.
     ```powershell
-    icacls C:\Users\adarshpandey\.ssh\config
+    icacls C:\Users\your_user_name\.ssh\config
     ```
-    *   The output should show a line like `adarshpandey:(F)` or `LAPTOP\adarshpandey:(F)` and **no other users or groups** (like `Administrators` or `SYSTEM`). If you see other users, something went wrong, but these commands are usually very effective.
+    *   The output should show a line like `your_user_name:(F)` or `LAPTOP\your_user_name:(F)` and **no other users or groups** (like `Administrators` or `SYSTEM`). If you see other users, something went wrong, but these commands are usually very effective.
