@@ -138,3 +138,48 @@ done
 
 echo "✅ Project with directory tree successfully exported to '$OUTPUT_FILE'"
 ```
+
+## SSH PERMISSION ON WINDOWS
+
+**Please follow these steps carefully.**
+
+1.  **Open PowerShell as Administrator:**
+    *   Click the Start Menu.
+    *   Type `PowerShell`.
+    *   **Right-click** on "Windows PowerShell" and select **"Run as administrator"**. You must run it as an administrator to change ownership and permissions correctly.
+
+2.  **Run the Following Commands One by One:**
+    *   Copy each command block below, paste it into the PowerShell window, and press Enter. Wait for it to complete before moving to the next one.
+    *   These commands will navigate to your user profile, take ownership of the `.ssh` folder, and then lock it down so only your user can access it.
+
+    **Command 1: Go to your user profile directory**
+    ```powershell
+    cd C:\Users\adarshpandey
+    ```
+
+    **Command 2: Take ownership of the `.ssh` folder and everything inside it.**
+    ```powershell
+    icacls .ssh /T /Q /C /setowner "adarshpandey"
+    ```
+
+    **Command 3: Reset all permissions on the folder.**
+    ```powershell
+    icacls .ssh /T /Q /C /reset
+    ```
+
+    **Command 4: Grant your user (`adarshpandey`) full control.** (This is the most important step).
+    ```powershell
+    icacls .ssh /T /Q /C /grant adarshpandey:F
+    ```
+
+    **Command 5: Remove permissions for everyone else (inheritance).**
+    ```powershell
+    icacls .ssh /T /Q /C /inheritance:r
+    ```
+
+3.  **Verify the Permissions (Optional but Recommended):**
+    *   Run this final command to see who has access to the `config` file.
+    ```powershell
+    icacls C:\Users\adarshpandey\.ssh\config
+    ```
+    *   The output should show a line like `adarshpandey:(F)` or `LAPTOP\adarshpandey:(F)` and **no other users or groups** (like `Administrators` or `SYSTEM`). If you see other users, something went wrong, but these commands are usually very effective.
