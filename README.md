@@ -95,7 +95,7 @@ Write-Host 'SUCCESS: Project exported to' $outputFile
 # --- Configuration ---
 OUTPUT_FILE="whole_project_structure.md"
 
-# FIX 1: Define excludes as a proper Bash array. This is cleaner and more reliable.
+# Define excludes as a proper Bash array. This is cleaner and more reliable.
 EXCLUDE_ARRAY=( 
     ".gitignore" 
     "metadata.json" 
@@ -119,7 +119,7 @@ done
 # Remove the trailing pipe character
 TREE_EXCLUDE_PATTERN=${TREE_EXCLUDE_PATTERN%|}
 
-# FIX 3: Build the '-path ... -o ...' arguments for the 'find' command
+# Build the '-path ... -o ...' arguments for the 'find' command
 FIND_EXCLUDE_ARGS=()
 for item in "${EXCLUDE_ARRAY[@]}"; do
     FIND_EXCLUDE_ARGS+=(-o -path "./$item")
