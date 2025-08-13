@@ -94,7 +94,38 @@ Write-Host 'SUCCESS: Project exported to' $outputFile
 
 # --- Configuration ---
 OUTPUT_FILE="whole_project_structure.md"
-EXCLUDE_DIRS="node_modules|.git|.vscode|dist|build|coverage"
+
+# FIX 1: Define excludes as a proper Bash array. This is cleaner and more reliable.
+EXCLUDE_ARRAY=( 
+    ".gitignore" 
+    "metadata.json" 
+    "README.md" 
+    "node_modules" 
+    ".git" 
+    ".vscode" 
+    "dist" 
+    "build" 
+    "coverage"
+    "$OUTPUT_FILE" # Also exclude the output file itself
+)
+
+# --- Dynamically build the exclusion patterns for each command ---
+
+# FIX 2: Build the pipe-separated pattern for the 'tree' command
+TREE_EXCLUDE_PATTERN=""
+for item in "${EXCLUDE_ARRAY[@]}"; do
+    TREE_EXCLUDE_PATTERN+="$item|"
+done
+# Remove the trailing pipe character
+TREE_EXCLUDE_PATTERN=${TREE_EXCLUDE_PATTERN%|}
+
+# FIX 3: Build the '-path ... -o ...' arguments for the 'find' command
+FIND_EXCLUDE_ARGS=()
+for item in "${EXCLUDE_ARRAY[@]}"; do
+    FIND_EXCLUDE_ARGS+=(-o -path "./$item")
+done
+# The first '-o' is not needed, so we remove it from the array
+FIND_EXCLUDE_ARGS=("${FIND_EXCLUDE_ARGS[@]:1}")
 
 # --- Script ---
 # 1. Start with a clean file and add the Tree Header
@@ -102,20 +133,16 @@ EXCLUDE_DIRS="node_modules|.git|.vscode|dist|build|coverage"
     echo "# Project Structure"
     echo ""
     echo "\`\`\`"
-    # 2. Generate and Add the Directory Tree
-    tree -aF --prune -I "$EXCLUDE_DIRS"
+    # Use the correctly formatted pattern for 'tree'
+    tree -aF --prune -I "$TREE_EXCLUDE_PATTERN"
     echo "\`\`\`"
     echo ""
     echo "# File Contents"
 } > "$OUTPUT_FILE"
 
-# 3. Append the contents of each file
-find . -path "./$EXCLUDE_DIRS" -prune -o -type f -print | while IFS= read -r file; do
-    # This check is important to skip the output file itself
-    if [[ "$file" == "./$OUTPUT_FILE" ]]; then
-        continue
-    fi
-
+# 2. Append the contents of each file
+# Use the correctly formatted arguments for 'find'
+find . \( "${FIND_EXCLUDE_ARGS[@]}" \) -prune -o -type f -print | while IFS= read -r file; do
     relativePath=$(echo "$file" | sed 's|^\./||')
     extension="${relativePath##*.}"
 
