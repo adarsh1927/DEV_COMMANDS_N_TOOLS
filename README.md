@@ -17,7 +17,7 @@ You will get the file whole_project_structure.ps1, change its extension to md or
 
 ```POWERSHELL (paste this in notepad)
 # --- Configuration ---
-$outputFile = 'whole_project_structure.ps1'
+$outputFile = 'whole_project_structure.md'
 $excludeDirs = @('node_modules', '.git', '.vscode', 'dist', 'build', 'coverage')
 $maxDepth = 15
 
@@ -25,17 +25,36 @@ $maxDepth = 15
 # Start with a clean file
 Clear-Content $outputFile -ErrorAction SilentlyContinue
 
-# Get all items first to avoid file lock issues
-$allItems = Get-ChildItem -Path . -Recurse -Depth $maxDepth -Exclude $excludeDirs | Where-Object { $_.Name -ne $outputFile }
+# --- Part 1: Get and Filter All Items (The Robust Way) ---
 
-# Prepare an array to hold all the output lines
-$outputLines = @()
-$outputLines += '# Project Structure'
-$outputLines += ''
-$outputLines += '```'
+# First, get ALL items recursively. We will filter them manually.
+$allPotentialItems = Get-ChildItem -Path . -Recurse -Depth $maxDepth | Where-Object { $_.Name -ne $outputFile }
 
-# Build the tree structure
-foreach ($item in $allItems) {
+# Now, use a powerful Where-Object filter on the FULL PATH of each item.
+$finalFilteredItems = $allPotentialItems | Where-Object {
+    $item = $_
+    # The '$isMatch' variable will track if the current item's path matches any exclude pattern.
+    $isMatch = $false
+    foreach ($excludeDir in $excludeDirs) {
+        # Check if the full path contains the directory name surrounded by backslashes.
+        # This is the most reliable way to check for a directory in a path.
+        if ($item.FullName -like "*\$excludeDir\*") {
+            $isMatch = $true
+            break # Found a match, no need to check other directories.
+        }
+    }
+    # This is the core of the logic: only keep items where a match was NOT found.
+    -not $isMatch
+}
+
+# --- Part 2: Build the Tree from the CLEAN list ---
+
+$treeLines = @()
+$treeLines += '# Project Structure'
+$treeLines += ''
+$treeLines += '```'
+
+foreach ($item in $finalFilteredItems) {
     $depth = $item.FullName.Split([System.IO.Path]::DirectorySeparatorChar).Count - $PWD.Path.Split([System.IO.Path]::DirectorySeparatorChar).Count
     
     $indentation = ''
@@ -52,17 +71,20 @@ foreach ($item in $allItems) {
         $prefix = '[File] '
     }
 
-    $outputLines += ($indentation + $prefix + $item.Name)
+    $treeLines += ($indentation + $prefix + $item.Name)
 }
 
-$outputLines += '```'
-$outputLines += ''
-$outputLines += '# File Contents'
+$treeLines += '```'
+$treeLines += ''
+$treeLines += '# File Contents'
 
-# Get all files to process
-$filesToProcess = Get-ChildItem -Path . -Recurse -File -Exclude $excludeDirs | Where-Object { $_.Name -ne $outputFile }
+Add-Content -Path $outputFile -Value $treeLines
 
-# Build the file content sections
+# --- Part 3: Append File Contents from the CLEAN list ---
+
+# We filter again for files only, but from our already-clean list.
+$filesToProcess = $finalFilteredItems | Where-Object { -not $_.PSIsContainer }
+
 foreach ($file in $filesToProcess) {
     $relativePath = $file.FullName.Replace($PWD.Path + '\', '')
     $extension = $file.Extension.TrimStart('.')
@@ -71,20 +93,20 @@ foreach ($file in $filesToProcess) {
         $extension = 'text'
     }
     
-    $outputLines += '---'
-    $outputLines += ('File: ' + $relativePath)
-    $outputLines += '---'
-    $outputLines += ''
-    $outputLines += ('```' + $extension)
-    $outputLines += (Get-Content -Path $file.FullName -Raw)
-    $outputLines += '```'
-    $outputLines += ''
+    $fileContent = @()
+    $fileContent += '---'
+    $fileContent += ('File: ' + $relativePath)
+    $fileContent += '---'
+    $fileContent += ''
+    $fileContent += ('```' + $extension)
+    $fileContent += (Get-Content -Path $file.FullName -Raw)
+    $fileContent += '```'
+    $fileContent += ''
+    
+    Add-Content -Path $outputFile -Value $fileContent
 }
 
-# Write all collected lines to the file at once
-Add-Content -Path $outputFile -Value $outputLines
-
-Write-Host 'SUCCESS: Project exported to' $outputFile
+Write-Host "SUCCESS: Project exported to '$outputFile'."
 ```
 
 ### Linux:
