@@ -20,7 +20,6 @@ Open git bash, paste this directly into it:-
 # --- Configuration ---
 OUTPUT_FILE="whole_project_structure.md"
 
-# Define excludes as a proper Bash array. This is cleaner and more reliable.
 EXCLUDE_ARRAY=( 
     ".gitignore" 
     "metadata.json" 
@@ -31,10 +30,10 @@ EXCLUDE_ARRAY=(
     "dist" 
     "build" 
     "coverage"
-    "$OUTPUT_FILE" # Also exclude the output file itself
+    "$OUTPUT_FILE" 
 )
 
-# --- Dynamically build the exclusion patterns for each command ---
+# --- Dynamically build exclusion patterns ---
 
 TREE_EXCLUDE_PATTERN=""
 for item in "${EXCLUDE_ARRAY[@]}"; do
@@ -49,27 +48,27 @@ done
 FIND_EXCLUDE_ARGS=("${FIND_EXCLUDE_ARGS[@]:1}")
 
 # --- Script ---
+# The entire output of the block {...} is piped to 'iconv' for conversion.
 {
+    # 1. Start with a clean file and add the Tree Header
     echo "# Project Structure"
     echo ""
     echo "\`\`\`"
-    # --- FIX: Removed the unsupported '--prune' flag ---
+    # Use the correctly formatted pattern for 'tree', without the unsupported '--prune'
     tree -aF -I "$TREE_EXCLUDE_PATTERN"
     echo "\`\`\`"
     echo ""
     echo "# File Contents"
-} > "$OUTPUT_FILE"
 
-# The rest of the script remains the same as it uses 'find', which is compatible.
-find . \( "${FIND_EXCLUDE_ARGS[@]}" \) -prune -o -type f -print | while IFS= read -r file; do
-    relativePath=$(echo "$file" | sed 's|^\./||')
-    extension="${relativePath##*.}"
+    # 2. Append the contents of each file
+    find . \( "${FIND_EXCLUDE_ARGS[@]}" \) -prune -o -type f -print | while IFS= read -r file; do
+        relativePath=$(echo "$file" | sed 's|^\./||')
+        extension="${relativePath##*.}"
 
-    if [[ "$relativePath" == "$extension" ]]; then
-        extension="text"
-    fi
-    
-    {
+        if [[ "$relativePath" == "$extension" ]]; then
+            extension="text"
+        fi
+        
         echo "---"
         echo "File: $relativePath"
         echo "---"
@@ -79,10 +78,12 @@ find . \( "${FIND_EXCLUDE_ARGS[@]}" \) -prune -o -type f -print | while IFS= rea
         echo ""
         echo "\`\`\`"
         echo ""
-    } >> "$OUTPUT_FILE"
-done
+    done
 
-echo "✅ Project with directory tree successfully exported to '$OUTPUT_FILE'"
+} | iconv -f "$(locale charmap)" -t "UTF-8" > "$OUTPUT_FILE"
+# --- End of critical change ---
+
+echo "✅ Project successfully exported to '$OUTPUT_FILE'."
 ```
 #### PowerShell
 1. Save this file in Notepad (do not use any fancy editor, use a raw text editor like Notepad).
