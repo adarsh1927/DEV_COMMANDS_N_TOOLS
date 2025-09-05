@@ -7,6 +7,80 @@ Save the entire structure, including the **Directory Tree** and **File Content**
 Open Terminal/PowerShell in the location of the project or any desired child directory, copy and paste the whole set of commands/script and press enter.  
 
 ### WINDOWS:
+#### GIT Bash
+Git Bash is an excellent tool for running Linux commands on Windows.  
+Open git bash, paste this directly on it:-
+```bash
+#!/bin/bash
+
+# --- Configuration ---
+OUTPUT_FILE="whole_project_structure.md"
+
+# Define excludes as a proper Bash array. This is cleaner and more reliable.
+EXCLUDE_ARRAY=( 
+    ".gitignore" 
+    "metadata.json" 
+    "README.md" 
+    "node_modules" 
+    ".git" 
+    ".vscode" 
+    "dist" 
+    "build" 
+    "coverage"
+    "$OUTPUT_FILE" # Also exclude the output file itself
+)
+
+# --- Dynamically build the exclusion patterns for each command ---
+
+TREE_EXCLUDE_PATTERN=""
+for item in "${EXCLUDE_ARRAY[@]}"; do
+    TREE_EXCLUDE_PATTERN+="$item|"
+done
+TREE_EXCLUDE_PATTERN=${TREE_EXCLUDE_PATTERN%|}
+
+FIND_EXCLUDE_ARGS=()
+for item in "${EXCLUDE_ARRAY[@]}"; do
+    FIND_EXCLUDE_ARGS+=(-o -path "./$item")
+done
+FIND_EXCLUDE_ARGS=("${FIND_EXCLUDE_ARGS[@]:1}")
+
+# --- Script ---
+{
+    echo "# Project Structure"
+    echo ""
+    echo "\`\`\`"
+    # --- FIX: Removed the unsupported '--prune' flag ---
+    tree -aF -I "$TREE_EXCLUDE_PATTERN"
+    echo "\`\`\`"
+    echo ""
+    echo "# File Contents"
+} > "$OUTPUT_FILE"
+
+# The rest of the script remains the same as it uses 'find', which is compatible.
+find . \( "${FIND_EXCLUDE_ARGS[@]}" \) -prune -o -type f -print | while IFS= read -r file; do
+    relativePath=$(echo "$file" | sed 's|^\./||')
+    extension="${relativePath##*.}"
+
+    if [[ "$relativePath" == "$extension" ]]; then
+        extension="text"
+    fi
+    
+    {
+        echo "---"
+        echo "File: $relativePath"
+        echo "---"
+        echo ""
+        echo "\`\`\`$extension"
+        cat "$file"
+        echo ""
+        echo "\`\`\`"
+        echo ""
+    } >> "$OUTPUT_FILE"
+done
+
+echo "✅ Project with directory tree successfully exported to '$OUTPUT_FILE'"
+```
+#### PowerShell
 1. Save this file in Notepad (do not use any fancy editor, use a raw text editor like Notepad).
 2. Copy and paste the script below in Notepad and save it as export.ps1 in your project directory or any desired child directory.
 3. Open PowerShell
