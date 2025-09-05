@@ -11,7 +11,7 @@ Open Terminal/PowerShell in the location of the project or any desired child dir
 Git Bash is an excellent tool for running Linux commands on Windows.  
 You just need to put tree.exe inside C:\Program Files\Git\usr\bin.  
 Download from here **[GnuWin32 Tree for Windows](https://sourceforge.net/projects/gnuwin32/files/tree/1.5.2.2/tree-1.5.2.2-bin.zip/download)**.  
-Inside the ZIP, navigate into the **`bin`** folder and copy tree.exe and paste it in C:\Program Files\Git\usr\bin.  
+Inside the ZIP, navigate into the **`bin`** folder and copy tree.exe and paste it in `C:\Program Files\Git\usr\bin`.  
 Close and reopen GIT Bash if it is open currently.  
 Open git bash, paste this directly into it:-
 ```bash
