@@ -182,7 +182,7 @@ Write-Host "SUCCESS: Project exported to '$outputFile'."
 # --- Configuration ---
 OUTPUT_FILE="whole_project_structure.md"
 
-# Define excludes as a proper Bash array. This is cleaner and more reliable.
+# 1. Define directories and files to exclude in a clean array
 EXCLUDE_ARRAY=( 
     ".gitignore" 
     "metadata.json" 
@@ -193,43 +193,60 @@ EXCLUDE_ARRAY=(
     "dist" 
     "build" 
     "coverage"
-    "$OUTPUT_FILE" # Also exclude the output file itself
+    "$OUTPUT_FILE" # Always exclude the output file itself
+    "export.md"
+    ".secondry_readme"
 )
 
-# --- Dynamically build the exclusion patterns for each command ---
+# 2. Define common binary file extensions to exclude from the content
+BINARY_EXTENSIONS=( 
+    "png" "jpg" "jpeg" "gif" "ico" "svg" "webp"
+    "woff" "woff2" "ttf" "eot" "otf" 
+    "pdf" "zip" "gz" "tar" "rar"
+    "exe" "dll" "so" "a" "lib" "jar"
+    "mp3" "mp4" "avi" "mov" "webm"
+)
 
-# FIX 2: Build the pipe-separated pattern for the 'tree' command
+# --- Dynamically build exclusion patterns for tree and find ---
+
+# Build the pipe-separated pattern for the 'tree' command
 TREE_EXCLUDE_PATTERN=""
 for item in "${EXCLUDE_ARRAY[@]}"; do
     TREE_EXCLUDE_PATTERN+="$item|"
 done
-# Remove the trailing pipe character
-TREE_EXCLUDE_PATTERN=${TREE_EXCLUDE_PATTERN%|}
+TREE_EXCLUDE_PATTERN=${TREE_EXCLUDE_PATTERN%|} # Remove the trailing pipe
 
-# Build the '-path ... -o ...' arguments for the 'find' command
+# Build the '-o -path' arguments for the 'find' command to exclude directories
 FIND_EXCLUDE_ARGS=()
 for item in "${EXCLUDE_ARRAY[@]}"; do
     FIND_EXCLUDE_ARGS+=(-o -path "./$item")
 done
-# The first '-o' is not needed, so we remove it from the array
-FIND_EXCLUDE_ARGS=("${FIND_EXCLUDE_ARGS[@]:1}")
+FIND_EXCLUDE_ARGS=("${FIND_EXCLUDE_ARGS[@]:1}") # Remove the initial '-o'
+
+# Build the '-o -iname' arguments for 'find' to exclude binary files
+BINARY_EXCLUDE_ARGS=()
+for ext in "${BINARY_EXTENSIONS[@]}"; do
+    BINARY_EXCLUDE_ARGS+=(-o -iname "*.$ext")
+done
+BINARY_EXCLUDE_ARGS=("${BINARY_EXCLUDE_ARGS[@]:1}") # Remove the initial '-o'
 
 # --- Script ---
-# 1. Start with a clean file and add the Tree Header
+
+# 1. Create the file header and the clean directory tree
 {
     echo "# Project Structure"
     echo ""
     echo "\`\`\`"
-    # Use the correctly formatted pattern for 'tree'
+    # Use the native Linux 'tree' command with the --prune flag for clarity
     tree -aF --prune -I "$TREE_EXCLUDE_PATTERN"
     echo "\`\`\`"
     echo ""
     echo "# File Contents"
-} > "$OUTPUT_FILE"
+} > "$OUTPUT_FILE" # Create the file (overwrite if exists)
 
-# 2. Append the contents of each file
-# Use the correctly formatted arguments for 'find'
-find . \( "${FIND_EXCLUDE_ARGS[@]}" \) -prune -o -type f -print | while IFS= read -r file; do
+# 2. Find all non-binary, non-excluded files and append their content
+# The 'find' command is powerful and reliable on Linux
+find . \( "${FIND_EXCLUDE_ARGS[@]}" \) -prune -o -type f -not \( "${BINARY_EXCLUDE_ARGS[@]}" \) -print | while IFS= read -r file; do
     relativePath=$(echo "$file" | sed 's|^\./||')
     extension="${relativePath##*.}"
 
@@ -237,6 +254,7 @@ find . \( "${FIND_EXCLUDE_ARGS[@]}" \) -prune -o -type f -print | while IFS= rea
         extension="text"
     fi
     
+    # Append (>>) the content for each file to the existing file
     {
         echo "---"
         echo "File: $relativePath"
@@ -250,7 +268,7 @@ find . \( "${FIND_EXCLUDE_ARGS[@]}" \) -prune -o -type f -print | while IFS= rea
     } >> "$OUTPUT_FILE"
 done
 
-echo "✅ Project with directory tree successfully exported to '$OUTPUT_FILE'"
+echo "✅ Project successfully exported to '$OUTPUT_FILE' (binary files ignored, UTF-8 native)."
 ```
 
 ## SSH PERMISSION ON WINDOWS
