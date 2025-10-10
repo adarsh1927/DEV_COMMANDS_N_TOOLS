@@ -20,54 +20,42 @@ Open git bash, paste this directly into it:-
 # --- Configuration ---
 OUTPUT_FILE="whole_project_structure.md"
 
-EXCLUDE_ARRAY=( 
-    ".gitignore" 
-    "metadata.json" 
-    "README.md" 
-    "node_modules" 
-    ".git" 
-    ".vscode" 
-    "dist" 
-    "build" 
-    "coverage"
-    "$OUTPUT_FILE" 
-)
+EXCLUDE_ARRAY=( ".gitignore" "metadata.json" "README.md" "node_modules" ".git" ".vscode" "dist" "build" "coverage" "$OUTPUT_FILE" "export.md" ".secondry_readme" )
+# --- FIX: Add a list of binary extensions to ignore ---
+BINARY_EXTENSIONS=( "png" "jpg" "jpeg" "gif" "ico" "svg" "woff" "woff2" "ttf" "eot" "otf" "pdf" "zip" "exe" "dll" "so" "a" "lib" )
 
 # --- Dynamically build exclusion patterns ---
-
 TREE_EXCLUDE_PATTERN=""
-for item in "${EXCLUDE_ARRAY[@]}"; do
-    TREE_EXCLUDE_PATTERN+="$item|"
-done
+for item in "${EXCLUDE_ARRAY[@]}"; do TREE_EXCLUDE_PATTERN+="$item|"; done
 TREE_EXCLUDE_PATTERN=${TREE_EXCLUDE_PATTERN%|}
 
 FIND_EXCLUDE_ARGS=()
-for item in "${EXCLUDE_ARRAY[@]}"; do
-    FIND_EXCLUDE_ARGS+=(-o -path "./$item")
-done
+for item in "${EXCLUDE_ARRAY[@]}"; do FIND_EXCLUDE_ARGS+=(-o -path "./$item"); done
 FIND_EXCLUDE_ARGS=("${FIND_EXCLUDE_ARGS[@]:1}")
 
+# --- FIX: Build the exclusion pattern for binary files for 'find' ---
+BINARY_EXCLUDE_ARGS=()
+for ext in "${BINARY_EXTENSIONS[@]}"; do
+    BINARY_EXCLUDE_ARGS+=(-o -iname "*.$ext")
+done
+# The first '-o' is not needed
+BINARY_EXCLUDE_ARGS=("${BINARY_EXCLUDE_ARGS[@]:2}")
+
 # --- Script ---
-# The entire output of the block {...} is piped to 'iconv' for conversion.
 {
-    # 1. Start with a clean file and add the Tree Header
     echo "# Project Structure"
     echo ""
     echo "\`\`\`"
-    # Use the correctly formatted pattern for 'tree', without the unsupported '--prune'
     tree -aF -I "$TREE_EXCLUDE_PATTERN"
     echo "\`\`\`"
     echo ""
     echo "# File Contents"
 
-    # 2. Append the contents of each file
-    find . \( "${FIND_EXCLUDE_ARGS[@]}" \) -prune -o -type f -print | while IFS= read -r file; do
+    # --- FIX: Modified 'find' to also exclude binary files ---
+    find . \( "${FIND_EXCLUDE_ARGS[@]}" \) -prune -o -type f -not \( "${BINARY_EXCLUDE_ARGS[@]}" \) -print | while IFS= read -r file; do
         relativePath=$(echo "$file" | sed 's|^\./||')
         extension="${relativePath##*.}"
-
-        if [[ "$relativePath" == "$extension" ]]; then
-            extension="text"
-        fi
+        if [[ "$relativePath" == "$extension" ]]; then extension="text"; fi
         
         echo "---"
         echo "File: $relativePath"
@@ -79,11 +67,9 @@ FIND_EXCLUDE_ARGS=("${FIND_EXCLUDE_ARGS[@]:1}")
         echo "\`\`\`"
         echo ""
     done
-
 } | iconv -f "$(locale charmap)" -t "UTF-8" > "$OUTPUT_FILE"
-# --- End of critical change ---
 
-echo "✅ Project successfully exported to '$OUTPUT_FILE'."
+echo "✅ Project successfully exported to '$OUTPUT_FILE' (binary files ignored)."
 ```
 #### PowerShell
 1. Save this file in Notepad (do not use any fancy editor, use a raw text editor like Notepad).
