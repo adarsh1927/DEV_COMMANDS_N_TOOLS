@@ -350,3 +350,12 @@ echo "✅ Project successfully exported to '$OUTPUT_FILE' (patterns and binaries
     icacls C:\Users\your_user_name\.ssh\config
     ```
     *   The output should show a line like `your_user_name:(F)` or `LAPTOP\your_user_name:(F)` and **no other users or groups** (like `Administrators` or `SYSTEM`). If you see other users, something went wrong, but these commands are usually very effective.
+
+
+## LARGE FILE TRANSFER
+**netcat**
+Known as the "network swiss army knife," this method is faster than scp or rsync for large transfers on a trusted local network because it lacks encryption overhead. 
+On the receiving machine:
+`nc -l -p 1234 > received_file`
+On the sending machine:
+`nc remote_ip 1234 < file_to_send`
