@@ -368,7 +368,7 @@ On the sending machine:
 ---
 ***
 
-## Managing Multiple SSH Identities on One Server
+##   MANAGING MULTIPLE SSH IDENTITIES ON ONE SERVER
 
 This guide explains how to set up and use a separate SSH identity (SSH Key) for specific GitHub repositories. This is useful when multiple people share a server or when you want to keep your personal projects separate from work or team projects.
 
