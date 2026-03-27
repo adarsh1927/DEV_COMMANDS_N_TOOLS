@@ -1,6 +1,7 @@
 # DEV_COMMANDS_N_TOOLS
 Use full dev commands and tools
 ---
+***
 
 ## PRINT WHOLE PROJECT IN MD FILE
 Save the entire structure, including the **Directory Tree** and **File Content**, in a **Markdown** file so you can easily chat with Cloude, Gemini, or ChatGPT without manually pasting files.  
@@ -305,7 +306,8 @@ done
 
 echo "✅ Project successfully exported to '$OUTPUT_FILE' (patterns and binaries ignored)."
 ```
-
+---
+***
 ## SSH PERMISSION ON WINDOWS
 
 **Please follow these steps carefully.**
@@ -351,6 +353,8 @@ echo "✅ Project successfully exported to '$OUTPUT_FILE' (patterns and binaries
     ```
     *   The output should show a line like `your_user_name:(F)` or `LAPTOP\your_user_name:(F)` and **no other users or groups** (like `Administrators` or `SYSTEM`). If you see other users, something went wrong, but these commands are usually very effective.
 
+---
+***
 
 ## LARGE FILE TRANSFER
 **netcat**
@@ -359,6 +363,10 @@ On the receiving machine:
 `nc -l -p 1234 > received_file`  
 On the sending machine:  
 `nc remote_ip 1234 < file_to_send`  
+
+
+---
+***
 
 ## Managing Multiple SSH Identities on One Server
 
