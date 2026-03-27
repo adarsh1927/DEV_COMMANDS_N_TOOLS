@@ -359,3 +359,88 @@ On the receiving machine:
 `nc -l -p 1234 > received_file`  
 On the sending machine:  
 `nc remote_ip 1234 < file_to_send`  
+
+## Managing Multiple SSH Identities on One Server
+
+This guide explains how to set up and use a separate SSH identity (SSH Key) for specific GitHub repositories. This is useful when multiple people share a server or when you want to keep your personal projects separate from work or team projects.
+
+---
+
+### Part 1: Initial Setup (One-time)
+
+These steps create your new identity and tell the server how to use it.
+
+#### 1. Generate a New SSH Key
+This command creates a unique "digital fingerprint" for your account.
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/id_adarsh1927 -N "" -C "your_email@example.com"
+```
+*   `-t ed25519`: The type of key (modern and secure).
+*   `-f ~/.ssh/id_adarsh1927`: The filename for your key.
+*   `-N ""`: No passphrase (optional, for convenience).
+*   `-C "email"`: A label to help you identify the key on GitHub.
+
+#### 2. Configure the SSH Alias
+We need to tell the server to use this specific key when connecting to GitHub for your projects. Edit (or create) the file `~/.ssh/config`:
+```ssh
+Host github-adarsh
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_adarsh1927
+    IdentitiesOnly yes
+```
+*   **Host github-adarsh**: This is your "nickname" for the connection. You will use this instead of `github.com` in your Git URLs.
+*   **IdentityFile**: Points directly to your new private key.
+*   **IdentitiesOnly yes**: Ensures only this key is tried for this connection.
+
+#### 3. Add the Public Key to GitHub
+You must give GitHub the "public" half of your key so it can recognize you.
+1. Run `cat ~/.ssh/id_adarsh1927.pub` and copy the output.
+2. On GitHub: **Settings > SSH and GPG keys > New SSH key**.
+3. Paste the key and save.
+
+---
+
+### Part 2: Working with Repositories
+
+#### For a NEW Repository (Initialization)
+When you start a new project folder and want it to use your identity:
+```bash
+# 1. Initialize the folder
+git init
+
+# 2. Add the remote using your ALIAS (github-adarsh)
+git remote add origin git@github-adarsh:username/repository-name.git
+
+# 3. Set your local git identity (so your name appears on commits)
+git config user.name "Your Name"
+git config user.email "your_email@example.com"
+```
+
+#### For an EXISTING Repository (Migration)
+If a folder is already a Git repo but using the wrong identity:
+```bash
+# 1. Update the remote URL to use the alias
+git remote set-url origin git@github-adarsh:username/repository-name.git
+
+# 2. Update local identity if needed
+git config user.name "Your Name"
+git config user.email "your_email@example.com"
+```
+
+---
+
+### Why we do this?
+*   **Isolation**: Your `git pull` and `git push` commands won't interfere with others.
+*   **Security**: You aren't sharing a single team key for your personal private projects.
+*   **Convenience**: By using the alias in the URL (e.g., `git@github-adarsh:...`), the server automatically knows which key to grab from your `~/.ssh/config`.
+
+---
+
+### Verification Command
+To test if your identity is working correctly:
+```bash
+ssh -T git@github-adarsh
+```
+You should see: *"Hi [YourUsername]! You've successfully authenticated..."*
+
